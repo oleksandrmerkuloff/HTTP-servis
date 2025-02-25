@@ -54,8 +54,12 @@ class PlanSerializer(serializers.ModelSerializer):
 
 
 class PaymentSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Payment
+        fields = '__all__'
 
 
 class DictionarySerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = Dictionary
+        fields = '__all__'
