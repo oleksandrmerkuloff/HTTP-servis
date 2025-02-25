@@ -3,6 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
+from django.db import models
 
 from .models import User, Credit, Plan, Payment, Dictionary
 from .serializers import UserSerializer, CreditSerializer, PlanSerializer, PaymentSerializer, DictionarySerializer
@@ -36,10 +37,33 @@ def plans_insert(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET',])
+@api_view(['GET'])
 def plans_performance(request):
-    pass
+    date = request.query_params.get('date')
+    if not date:
+        return Response({'error': 'Введіть дату'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        date = pd.to_datetime(date)
+        plans = Plan.objects.all()
+        performance_data = []
 
+        for plan in plans:
+            if plan.category.name == "Видача":
+                total_issued = Credit.objects.filter(issuance_date__range=[plan.period, date]).aggregate(total=models.Sum('body'))['total'] or 0
+            else:
+                total_issued = Payment.objects.filter(payment_date__range=[plan.period, date], type=plan.category).aggregate(total=models.Sum('sum'))['total'] or 0
+
+            performance_data.append({
+                'period': plan.period,
+                'category': plan.category.name,
+                'sum': plan.sum,
+                'total_issued': total_issued,
+                'performance_percent': (total_issued / plan.sum) * 100 if plan.sum != 0 else 0
+            })
+
+        return Response(performance_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET',])
 def year_performance(request):
