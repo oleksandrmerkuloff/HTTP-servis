@@ -74,17 +74,17 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASE_URL = 'mysql+pymysql://Crystal1s:People211#@localhost/factoring_db'
+DATABASE_URL = 'mysql+pymysql://admin:People211#@factoring-db.cmhnlcxv2doo.eu-north-1.rds.amazonaws.com/REFDB'
 engine = create_engine(DATABASE_URL)
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'factoring_db',
-        'USER': 'Crystal1s',
+        'NAME': 'REFDB',
+        'USER': 'admin',
         'PASSWORD': 'People211#',
-        'HOST': 'localhost',
-        'PORT': '3306'
+        'HOST': 'factoring-db.cmhnlcxv2doo.eu-north-1.rds.amazonaws.com',
+        'PORT': 3306
     }
 }
 
