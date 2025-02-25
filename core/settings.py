@@ -74,13 +74,13 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASE_URL = 'mysql+pymysql://Crystal1s:People211#@localhost/fraction_db'
+DATABASE_URL = 'mysql+pymysql://Crystal1s:People211#@localhost/factoring_db'
 engine = create_engine(DATABASE_URL)
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'factorign_db',
+        'NAME': 'factoring_db',
         'USER': 'Crystal1s',
         'PASSWORD': 'People211#',
         'HOST': 'localhost',

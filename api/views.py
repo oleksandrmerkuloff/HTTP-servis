@@ -65,6 +65,45 @@ def plans_performance(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET',])
+@api_view(['GET'])
 def year_performance(request):
-    pass
+    year = request.query_params.get('year')
+    if not year:
+        return Response({'error': 'Введіть рік'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        year = int(year)
+        performance_data = []
+
+        for month in range(1, 13):
+            start_date = f"{year}-{month:02d}-01"
+            end_date = f"{year}-{month+1:02d}-01" if month != 12 else f"{year+1}-01-01"
+            plans = Plan.objects.filter(period__year=year, period__month=month)
+            issued_credits = Credit.objects.filter(issuance_date__range=[start_date, end_date])
+            payments = Payment.objects.filter(payment_date__range=[start_date, end_date])
+
+            sum_plans_issued = plans.filter(category__name="Видача").aggregate(total=models.Sum('sum'))['total'] or 0
+            sum_credits_issued = issued_credits.aggregate(total=models.Sum('body'))['total'] or 0
+
+            sum_plans_collected = plans.filter(category__name="Збір").aggregate(total=models.Sum('sum'))['total'] or 0
+            sum_payments_collected = payments.aggregate(total=models.Sum('sum'))['total'] or 0
+
+            total_year_credits = Credit.objects.filter(issuance_date__year=year).aggregate(total=models.Sum('body'))['total'] or 0
+            total_year_payments = Payment.objects.filter(payment_date__year=year).aggregate(total=models.Sum('sum'))['total'] or 0
+
+            performance_data.append({
+                'month_year': f"{year}-{month:02d}",
+                'count_credits_issued': issued_credits.count(),
+                'sum_plans_issued': sum_plans_issued,
+                'sum_credits_issued': sum_credits_issued,
+                'performance_percent_issued': (sum_credits_issued / sum_plans_issued) * 100 if sum_plans_issued != 0 else 0,
+                'count_payments': payments.count(),
+                'sum_plans_collected': sum_plans_collected,
+                'sum_payments_collected': sum_payments_collected,
+                'performance_percent_collected': (sum_payments_collected / sum_plans_collected) * 100 if sum_plans_collected != 0 else 0,
+                'percent_of_year_credits': (sum_credits_issued / total_year_credits) * 100 if total_year_credits != 0 else 0,
+                'percent_of_year_payments': (sum_payments_collected / total_year_payments) * 100 if total_year_payments != 0 else 0,
+            })
+
+        return Response(performance_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
